@@ -4,8 +4,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
 import store from './redux/store/store';
+import { loadCartFromDbAction } from './redux/actions/cartAction';
 
 import Login from './login_register/Login';
 import RegisterScreen from './login_register/Register';
@@ -51,19 +53,31 @@ function HomeTabs() {
   );
 }
 
+function AppContent() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(loadCartFromDbAction());
+  }, [dispatch]);
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="HomeTabs" component={HomeTabs} />
+        <Stack.Screen name="ProductManagement" component={ProductManagement} />
+        <Stack.Screen name="AddProduct" component={AddProduct} />
+        <Stack.Screen name="DetailProduct" component={DetailProduct} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="HomeTabs" component={HomeTabs} />
-          <Stack.Screen name="ProductManagement" component={ProductManagement} />
-          <Stack.Screen name="AddProduct" component={AddProduct} />
-          <Stack.Screen name="DetailProduct" component={DetailProduct} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <AppContent />
     </Provider>
   );
 }

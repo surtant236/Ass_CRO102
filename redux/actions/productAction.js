@@ -1,7 +1,7 @@
 import axios from "axios";
 import { addProduct, setProducts, editProduct, deleteProduct, setLoading, setError } from "../reducers/productReducer";
 
-const apiUrl = "http://192.168.25.2:3000/products"; // Thay đổi URL theo server của bạn
+const apiUrl = "http://192.168.1.23:3000/products"; 
 
 export const getListProducts = () => async (dispatch) => {
     try {

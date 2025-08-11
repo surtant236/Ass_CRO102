@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector, useDispatch } from 'react-redux';
-import { removeFromCart, updateQuantity, clearCart } from '../redux/reducers/cartReducer';
+import { removeFromCart, updateQuantity, clearCart } from '../redux/actions/cartAction';
 
 const CartScreen = () => {
     const dispatch = useDispatch();
@@ -109,7 +109,7 @@ const CartScreen = () => {
             <View style={styles.totalContainer}>
                 <View style={styles.totalRow}>
                     <Text style={styles.totalLabel}>Tổng cộng:</Text>
-                    <Text style={styles.totalAmount}>{totalAmount.toLocaleString('vi-VN')} VNĐ</Text>
+                    <Text style={styles.totalAmount}>{totalAmount} VNĐ</Text>
                 </View>
                 <TouchableOpacity style={styles.checkoutButton}>
                     <Text style={styles.checkoutButtonText}>Thanh toán</Text>

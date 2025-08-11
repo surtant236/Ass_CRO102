@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../redux/reducers/cartReducer';
+import { addToCart } from '../redux/actions/cartAction';
 
 const DetailProduct = ({ route, navigation }) => {
     const { product } = route.params;

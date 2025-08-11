@@ -61,9 +61,19 @@ const cartSlice = createSlice({
             state.cartItems = [];
             state.totalAmount = 0;
             state.totalQuantity = 0;
+        },
+        loadCartFromDb(state, action) {
+            const cartItems = action.payload || [];
+            state.cartItems = cartItems;
+            
+            // Recalculate totals
+            state.totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+            state.totalAmount = cartItems.reduce((total, item) => 
+                total + (parseFloat(item.price.replace(/[^\d]/g, '')) * item.quantity), 0
+            );
         }
     }
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, updateQuantity, clearCart, loadCartFromDb } = cartSlice.actions;
 export default cartSlice.reducer;

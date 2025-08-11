@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Image }
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getListProducts } from '../redux/actions/productAction';
-import { addToCart } from '../redux/reducers/cartReducer';
+import { addToCart } from '../redux/actions/cartAction';
 
 const HomeScreen = ({ navigation }) => {
     const dispatch = useDispatch();
