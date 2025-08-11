@@ -1,0 +1,33 @@
+{
+  "products": [
+    {
+      "id": "dcb6",
+      "name": "abc",
+      "price": "1000000 VNĐ",
+      "image": "https://cdn.f20beauty.com/22492/27936cde98c7666cc2539dc553f8f319.jpg",
+      "description": "abcbcbcbc"
+    },
+    {
+      "id": "5b8f",
+      "name": "abc abc",
+      "price": "20000000000 VNĐ",
+      "image": "https://cdn.f20beauty.com/22492/27936cde98c7666cc2539dc553f8f319.jpg",
+      "description": "hay dep\n"
+    },
+    {
+      "id": "620f",
+      "name": "abc",
+      "price": "10000 VNĐ",
+      "image": "https://cdn.f20beauty.com/22492/27936cde98c7666cc2539dc553f8f319.jpg",
+      "description": "dep"
+    },
+    {
+      "id": "5336",
+      "name": "abcbcb",
+      "price": "1202212 VNĐ",
+      "image": "",
+      "description": "depđe"
+    }
+  ],
+  "carts": []
+}

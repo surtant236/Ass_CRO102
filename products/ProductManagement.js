@@ -1,12 +1,33 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, FlatList, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useDispatch, useSelector } from 'react-redux';
+import { getListProducts, addProductAction, deleteProductAction, editProductAction } from '../redux/actions/productAction';
 
 const ProductManagement = ({ navigation }) => {
+    const dispatch = useDispatch();
+    const { listProducts, loading } = useSelector(state => state.product);
+    
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingProduct, setEditingProduct] = useState(null);
     const [productName, setProductName] = useState('');
     const [productPrice, setProductPrice] = useState('');
+    const [productImage, setProductImage] = useState('');
     const [productDescription, setProductDescription] = useState('');
+
+    useEffect(() => {
+        dispatch(getListProducts());
+    }, [dispatch]);
+
+    const resetForm = () => {
+        setProductName('');
+        setProductPrice('');
+        setProductImage('');
+        setProductDescription('');
+        setIsEditMode(false);
+        setEditingProduct(null);
+    };
 
     const handleAddProduct = () => {
         if (!productName || !productPrice) {
@@ -14,22 +35,82 @@ const ProductManagement = ({ navigation }) => {
             return;
         }
 
+        const productData = {
+            name: productName,
+            price: productPrice + ' VNĐ',
+            image: productImage || '',
+            description: productDescription
+        };
+
+        if (isEditMode && editingProduct) {
+            dispatch(editProductAction(editingProduct.id, productData));
+            Alert.alert('Thành công', 'Đã cập nhật sản phẩm!');
+        } else {
+            dispatch(addProductAction(productData));
+            Alert.alert('Thành công', 'Đã thêm sản phẩm mới!');
+        }
+
+        resetForm();
+        setIsModalVisible(false);
+    };
+
+    const handleEditProduct = (product) => {
+        setEditingProduct(product);
+        setProductName(product.name);
+        setProductPrice(product.price.replace(' VNĐ', ''));
+        setProductImage(product.image);
+        setProductDescription(product.description || '');
+        setIsEditMode(true);
+        setIsModalVisible(true);
+    };
+
+    const handleDeleteProduct = (productId) => {
         Alert.alert(
-            'Thành công', 
-            'Đã thêm sản phẩm mới!',
+            'Xác nhận xóa',
+            'Bạn có chắc chắn muốn xóa sản phẩm này?',
             [
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        setProductName('');
-                        setProductPrice('');
-                        setProductDescription('');
-                        setIsModalVisible(false);
-                    }
-                }
+                { text: 'Hủy', style: 'cancel' },
+                { text: 'Xóa', onPress: () => dispatch(deleteProductAction(productId)) }
             ]
         );
     };
+
+    const openAddModal = () => {
+        resetForm();
+        setIsModalVisible(true);
+    };
+
+    const renderProduct = ({ item }) => (
+        <View style={styles.productCard}>
+            <Image 
+                source={{ uri: item.image || 'https://via.placeholder.com/80x80/E0E0E0/666666?text=No+Image' }} 
+                style={styles.productImage} 
+            />
+            <View style={styles.productInfo}>
+                <Text style={styles.productName}>{item.name}</Text>
+                <Text style={styles.productPrice}>{item.price}</Text>
+                {item.description && (
+                    <Text style={styles.productDescription} numberOfLines={2}>
+                        {item.description}
+                    </Text>
+                )}
+            </View>
+            <View style={styles.productActions}>
+                <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={() => handleEditProduct(item)}
+                >
+                    <Icon name="pencil" size={20} color="#4CAF50" />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteProduct(item.id)}
+                >
+                    <Icon name="delete" size={20} color="#F44336" />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
     return (
         <View style={styles.container}>
@@ -44,16 +125,29 @@ const ProductManagement = ({ navigation }) => {
             </View>
 
             <View style={styles.content}>
-                <Text style={styles.welcomeText}>Quản lý sản phẩm</Text>
-                <Text style={styles.descriptionText}>
-                    Thêm và quản lý sản phẩm
-                </Text>
+                {listProducts.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <Icon name="package-variant" size={80} color="#BDBDBD" />
+                        <Text style={styles.emptyTitle}>Chưa có sản phẩm</Text>
+                        <Text style={styles.emptyDescription}>
+                            Thêm sản phẩm đầu tiên của bạn bằng cách nhấn nút + bên dưới
+                        </Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={listProducts}
+                        renderItem={renderProduct}
+                        keyExtractor={(item) => item.id?.toString()}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.productList}
+                    />
+                )}
             </View>
 
             {/* Floating Action Button */}
             <TouchableOpacity 
                 style={styles.fab}
-                onPress={() => setIsModalVisible(true)}
+                onPress={openAddModal}
             >
                 <Icon name="plus" size={28} color="#fff" />
             </TouchableOpacity>
@@ -68,9 +162,14 @@ const ProductManagement = ({ navigation }) => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Thêm sản phẩm mới</Text>
+                            <Text style={styles.modalTitle}>
+                                {isEditMode ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}
+                            </Text>
                             <TouchableOpacity 
-                                onPress={() => setIsModalVisible(false)}
+                                onPress={() => {
+                                    resetForm();
+                                    setIsModalVisible(false);
+                                }}
                                 style={styles.closeButton}
                             >
                                 <Icon name="close" size={24} color="#666" />
@@ -97,13 +196,22 @@ const ProductManagement = ({ navigation }) => {
                                 onChangeText={setProductPrice}
                             />
 
+                            <Text style={styles.label}>Link hình ảnh</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Nhập URL hình ảnh sản phẩm"
+                                placeholderTextColor="#999"
+                                value={productImage}
+                                onChangeText={setProductImage}
+                            />
+
                             <Text style={styles.label}>Mô tả sản phẩm</Text>
                             <TextInput
                                 style={[styles.input, styles.textArea]}
                                 placeholder="Nhập mô tả chi tiết sản phẩm..."
                                 placeholderTextColor="#999"
                                 multiline
-                                numberOfLines={4}
+                                numberOfLines={2}
                                 value={productDescription}
                                 onChangeText={setProductDescription}
                             />
@@ -111,7 +219,10 @@ const ProductManagement = ({ navigation }) => {
                             <View style={styles.modalButtons}>
                                 <TouchableOpacity 
                                     style={styles.cancelButton}
-                                    onPress={() => setIsModalVisible(false)}
+                                    onPress={() => {
+                                        resetForm();
+                                        setIsModalVisible(false);
+                                    }}
                                 >
                                     <Text style={styles.cancelButtonText}>Hủy</Text>
                                 </TouchableOpacity>
@@ -120,7 +231,9 @@ const ProductManagement = ({ navigation }) => {
                                     style={styles.addButton}
                                     onPress={handleAddProduct}
                                 >
-                                    <Text style={styles.addButtonText}>Thêm</Text>
+                                    <Text style={styles.addButtonText}>
+                                        {isEditMode ? 'Cập nhật' : 'Thêm'}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -161,9 +274,86 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        padding: 20,
+        padding: 15,
+    },
+    emptyState: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#2E7D32',
+        marginTop: 20,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    emptyDescription: {
+        fontSize: 16,
+        color: '#66BB6A',
+        textAlign: 'center',
+        lineHeight: 24,
+    },
+    productList: {
+        paddingBottom: 100,
+    },
+    productCard: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 15,
+        marginBottom: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    productImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        marginRight: 15,
+    },
+    productInfo: {
+        flex: 1,
+    },
+    productName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#2E7D32',
+        marginBottom: 5,
+    },
+    productPrice: {
+        fontSize: 14,
+        color: '#4CAF50',
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    productDescription: {
+        fontSize: 12,
+        color: '#666',
+        lineHeight: 16,
+    },
+    productActions: {
+        flexDirection: 'row',
+    },
+    editButton: {
+        padding: 8,
+        marginRight: 5,
+        backgroundColor: '#E8F5E8',
+        borderRadius: 8,
+    },
+    deleteButton: {
+        padding: 8,
+        backgroundColor: '#FFEBEE',
+        borderRadius: 8,
     },
     welcomeText: {
         fontSize: 20,
@@ -206,46 +396,47 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: '#fff',
-        borderRadius: 20,
+        borderRadius: 15,
         width: '90%',
-        maxHeight: '80%',
+        maxHeight: '75%',
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
+        padding: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#333',
     },
     closeButton: {
-        padding: 5,
+        padding: 3,
     },
     modalForm: {
-        padding: 20,
+        paddingHorizontal: 15,
+        paddingVertical: 8,
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
         color: '#2E7D32',
-        marginBottom: 8,
-        marginTop: 15,
+        marginBottom: 4,
+        marginTop: 6,
     },
     input: {
         backgroundColor: '#fff',
-        borderRadius: 12,
-        borderWidth: 2,
+        borderRadius: 8,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        fontSize: 16,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        fontSize: 14,
         color: '#333',
-        marginBottom: 16,
+        marginBottom: 8,
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
@@ -257,37 +448,37 @@ const styles = StyleSheet.create({
     },
     textArea: {
         textAlignVertical: 'top',
-        minHeight: 100,
-        maxHeight: 120,
+        minHeight: 50,
+        maxHeight: 70,
     },
     modalButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 20,
+        marginTop: 10,
     },
     cancelButton: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        padding: 15,
-        borderRadius: 10,
-        marginRight: 10,
+        padding: 12,
+        borderRadius: 8,
+        marginRight: 8,
     },
     cancelButtonText: {
         color: '#666',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
     },
     addButton: {
         flex: 1,
         backgroundColor: '#4CAF50',
-        padding: 15,
-        borderRadius: 10,
-        marginLeft: 10,
+        padding: 12,
+        borderRadius: 8,
+        marginLeft: 8,
     },
     addButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         textAlign: 'center',
     },

@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "server": "json-server --watch db.json --port 3000"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.4.4",
@@ -20,7 +21,7 @@
     "react-native": "0.79.5",
     "react-native-image-picker": "^8.2.1",
     "react-native-reanimated": "^4.0.0",
-    "react-native-safe-area-context": "5.4.0",
+    "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "~4.11.1",
     "react-redux": "^9.2.0"
   },

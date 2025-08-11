@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useDispatch, useSelector } from 'react-redux';
+import { getListProducts } from '../redux/actions/productAction';
+import { addToCart } from '../redux/reducers/cartReducer';
 
 const HomeScreen = ({ navigation }) => {
-    const products = [
+    const dispatch = useDispatch();
+    const products = useSelector(state => state.product.listProducts);
+    const cartQuantity = useSelector(state => state.cart.totalQuantity);
+    
+    // Mock data nếu không có dữ liệu từ API
+    const mockProducts = [
         {
             id: '1',
             name: 'Cây abc',
@@ -30,11 +38,36 @@ const HomeScreen = ({ navigation }) => {
         },
     ];
 
+    const displayProducts = products.length > 0 ? products : mockProducts;
+
+    useEffect(() => {
+        dispatch(getListProducts());
+    }, [dispatch]);
+
+    const handleAddToCart = (product) => {
+        dispatch(addToCart(product));
+    };
+
     const renderProduct = ({ item }) => (
-        <TouchableOpacity style={styles.productCard}>
-            <Image source={{ uri: item.image }} style={styles.productImage} />
+        <TouchableOpacity 
+            style={styles.productCard}
+            onPress={() => navigation.navigate('DetailProduct', { product: item })}
+        >
+            <Image 
+                source={{ uri: item.image || 'https://via.placeholder.com/120x120/E0E0E0/666666?text=No+Image' }} 
+                style={styles.productImage} 
+            />
             <Text style={styles.productName}>{item.name}</Text>
             <Text style={styles.productPrice}>{item.price}</Text>
+            <TouchableOpacity 
+                style={styles.addToCartButton}
+                onPress={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(item);
+                }}
+            >
+                <Text style={styles.addToCartText}>Thêm vào giỏ</Text>
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 
@@ -55,7 +88,7 @@ const HomeScreen = ({ navigation }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Cây Cảnh Nổi Bật </Text>
                     <FlatList
-                        data={products}
+                        data={displayProducts}
                         renderItem={renderProduct}
                         keyExtractor={(item) => item.id}
                         numColumns={2}
@@ -150,6 +183,19 @@ const styles = StyleSheet.create({
         color: '#4CAF50',
         fontWeight: 'bold',
         textAlign: 'center',
+        marginBottom: 8,
+    },
+    addToCartButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    addToCartText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
 });
 
